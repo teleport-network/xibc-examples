@@ -3,10 +3,10 @@
 pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
-import "./interfaces/IRCC.sol";
 import "./interfaces/IPingPong.sol";
-import "contracts/libraries/app/RCC.sol";
-import "contracts/libraries/packet/Packet.sol";
+import "xibc-contracts/evm/contracts/interfaces/IRCC.sol";
+import "xibc-contracts/evm/contracts/libraries/app/RCC.sol";
+import "xibc-contracts/evm/contracts/libraries/packet/Packet.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 contract PingPongRC {

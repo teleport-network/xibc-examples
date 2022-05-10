@@ -3,8 +3,6 @@
 pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
-import "../proto/Types.sol";
-import "../libraries/packet/Packet.sol";
 
 interface IPingPong {
 

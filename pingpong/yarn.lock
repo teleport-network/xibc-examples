@@ -8181,6 +8181,10 @@ xhr@^2.0.4, xhr@^2.2.0, xhr@^2.3.3:
     parse-headers "^2.0.0"
     xtend "^4.0.0"
 
+"xibc-contracts@https://github.com/teleport-network/xibc-contracts":
+  version "0.0.0"
+  resolved "https://github.com/teleport-network/xibc-contracts#a0f19310c2b16e597772426964108fb6deb819f6"
+
 xtend@^4.0.0, xtend@^4.0.1, xtend@^4.0.2, xtend@~4.0.0, xtend@~4.0.1:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/xtend/-/xtend-4.0.2.tgz#bb72779f5fa465186b1f438f674fa347fdb5db54"
