@@ -11,4 +11,7 @@ const { getLogs } = require("./utils");
 
 
 describe("PingPongRC", function () {
+
+
+    console.log("hello")
 });

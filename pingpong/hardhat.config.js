@@ -2,11 +2,9 @@ require("./tasks/test");
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("@tenderly/hardhat-tenderly");
-require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-web3");
 require("@nomiclabs/hardhat-etherscan");
 require('dotenv').config()
-
 
 module.exports = {
   solidity: {
@@ -21,10 +19,8 @@ module.exports = {
   defaultNetwork: "rinkeby",
   networks: {
     rinkeby: {
-      url: "https://rinkeby.infura.io/v3/401fd4a9e1ee481bb6138ebe3da95316",
-      gasPrice: 30735455164,
+      url: process.env.INFURA,
       chainId: 4,
-      // gas: 4100000,
       accounts: [process.env.PRIV_KEY]
     },
     bsc: {

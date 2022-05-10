@@ -30,8 +30,7 @@ contract PingPongRC {
         string calldata relayChain,
         address feeAddr,
         uint256 feeAmount
-    ) external {
-        
+    ) external payable {
         bytes memory reqBytes = abi.encodeWithSelector(IPingPong.ping.selector);
         IRCC rcc = IRCC(rccAddr);
 
@@ -43,6 +42,6 @@ contract PingPongRC {
         );
         PacketTypes.Fee memory fee = PacketTypes.Fee(feeAddr, feeAmount);
 
-        rcc.sendRemoteContractCall(rccData, fee);
+        rcc.sendRemoteContractCall{value: msg.value}(rccData, fee);
     }
 }
