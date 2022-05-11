@@ -18,8 +18,7 @@
     "web3": "^1.7.3"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "3.4.0",
-    "xibc-contracts": "https://github.com/teleport-network/xibc-contracts"
+    "xibc-contracts": "git+ssh://git@github.com:teleport-network/xibc-contracts.git#meta/add_package_dot_json"
   },
   "scripts": {
     "test": "hardhat test --network localhost"

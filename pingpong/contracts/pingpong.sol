@@ -7,11 +7,8 @@ import "./interfaces/IPingPong.sol";
 import "xibc-contracts/evm/contracts/interfaces/IRCC.sol";
 import "xibc-contracts/evm/contracts/libraries/app/RCC.sol";
 import "xibc-contracts/evm/contracts/libraries/packet/Packet.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
 
 contract PingPongRC {
-    using Address for address;
-
     address rccAddr;
 
     constructor(address _rccAddr) public {
