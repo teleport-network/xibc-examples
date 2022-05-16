@@ -3,28 +3,26 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-const { ethers } = require("hardhat");
 const hre = require("hardhat");
+require('dotenv').config()
 
 async function main() {
-  // Hardhat always runs the compile task when running scripts with its command
-  // line interface.
-  //
-  // If this script is run directly using `node` you may want to call compile
-  // manually to make sure everything is compiled
-  // await hre.run('compile');
 
-  // We get the contract to deploy
+  // chain info
+  console.log(await hre.ethers.provider.getTransactionCount("0x7e01879e94241c8A022Cb6708C7F241f86039Ff6"))
+  let gasData = await hre.ethers.provider.getFeeData()
+  console.log("gasData", gasData)
+  console.log("gasPrice", hre.ethers.utils.formatUnits(gasData.gasPrice, "gwei"), "gwei");
+
   const PingPongRC = await hre.ethers.getContractFactory("PingPongRC");
-  const ct = await PingPongRC.deploy("0x728fd3ae64930f98998d52ed4f79dcd5b0773c09");
-
+  const ct = await PingPongRC.deploy(process.env.RCC_ADDRESS, gasData);
   await ct.deployed();
 
-  console.log("Test deployed to:", ct.address);
-  await hre.tenderly.persistArtifacts({
-    name: "PingPongRC",
-    address: ct.address,
-  })
+  console.log("network:", hre.network.name, "PingPongRC deployed to:", ct.address);
+  // await hre.tenderly.persistArtifacts({
+  //   name: "PingPongRC",
+  //   address: ct.address,
+  // })
 
 }
 
@@ -38,4 +36,5 @@ main()
   });
 
 
-  // 0x674a7C3Bd70C42905421e567f3C7cbeb661e59A6
+// bsc:0x6BC6226CD68d8C9327e135ABB5241B3FDEe7e9e1
+// tele:0xDE15CBA96deAD6Bdd201aa27fc19e15F2bAB6D02

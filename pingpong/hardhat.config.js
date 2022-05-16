@@ -16,7 +16,7 @@ module.exports = {
       },
     }
   },
-  defaultNetwork: "rinkeby",
+  defaultNetwork: "bsc",
   networks: {
     rinkeby: {
       url: process.env.INFURA,
@@ -25,10 +25,14 @@ module.exports = {
     },
     bsc: {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
-      // gasPrice: 63000000,
       chainId: 97,
       gas: 4100000,
       // nonce:
+      accounts: [process.env.PRIV_KEY]
+    },
+    tele: {
+      url: "https://evm-rpc.testnet.teleport.network",
+      chainId: 8001,
       accounts: [process.env.PRIV_KEY]
     }
   },

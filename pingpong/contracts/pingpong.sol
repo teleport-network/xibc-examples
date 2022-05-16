@@ -7,9 +7,12 @@ import "./interfaces/IPingPong.sol";
 import "xibc-contracts/evm/contracts/interfaces/IRCC.sol";
 import "xibc-contracts/evm/contracts/libraries/app/RCC.sol";
 import "xibc-contracts/evm/contracts/libraries/packet/Packet.sol";
+import "xibc-contracts/evm/contracts/libraries/utils/Bytes.sol";
+import "xibc-contracts/evm/contracts/core/packet/Packet.sol";
 
 contract PingPongRC {
     address rccAddr;
+    using Bytes for address;
 
     constructor(address _rccAddr) public {
         rccAddr = _rccAddr;
@@ -32,7 +35,7 @@ contract PingPongRC {
         IRCC rcc = IRCC(rccAddr);
 
         RCCDataTypes.RCCData memory rccData = RCCDataTypes.RCCData(
-            string(abi.encodePacked(addr)),
+            addr.addressToString(),
             reqBytes,
             destChain,
             relayChain

@@ -6,15 +6,12 @@
  */
 
 require("../hardhat.config");
+require('dotenv').config()
 
 let PingPongRCAddr = ""
-PingPongRCAddr = process.env.PingPongRCAddr
+PingPongRCAddr = process.env.PINGPONG_BSC
 
 
-let targetChain = "teleport"
-// teleport
-// bsc-testnet
-// rinkeby
 
 
 task("callRemotePing", "callRemotePing")
@@ -24,12 +21,12 @@ task("callRemotePing", "callRemotePing")
     // .addParam("feeaddr", "")
     // .addParam("feeamount", "")
     .setAction(async (args, hre) => {
+
+
         let feedata = await ethers.provider.getFeeData()
         const factory = await hre.ethers.getContractFactory('PingPongRC')
         let ct;
 
-        // 全部重新部署
-        PingPongRCAddr = ""
         if (PingPongRCAddr === '') {
             ct = await factory.deploy(process.env.RCC_ADDRESS);
             await ct.deployed();
@@ -39,18 +36,43 @@ task("callRemotePing", "callRemotePing")
 
         feedata.value = 1000;
         feedata.gasLimit = 5000000;
-        delete feedata.gasPrice;
-        console.log(feedata)
+        console.log("feedata", feedata)
 
+
+        // method args
+        let callArgs = [
+            process.env.PINGPONG_TELE,//target contract addr
+            process.env.TARGET_CHAIN, //target chain
+            '',                       // relay chain
+            hre.ethers.constants.AddressZero, // fee address
+            1000,]                              // 
         const result = await ct.callRemotePing(
-            '0x50E7134468C9b25a4403EC06594741b73361C3E3',
-            targetChain,
+            process.env.PINGPONG_TELE,
+            process.env.TARGET_CHAIN,
             '',
             hre.ethers.constants.AddressZero,
             1000,
             feedata);
-        console.log("call complete")
-        console.log(await result.wait())
+        let receipt = await result.wait()
+        console.log("receipt", receipt)
+
+    })
+
+// task for get packge event from x block
+task("getSendPacketEvent", "")
+    .addParam("block", "")
+    .setAction(async (args, hre) => {
+        console.log(args)
+        let factory = await hre.ethers.getContractFactory("Packet")
+        let ct = factory.attach(process.env.PACKET_ADDRESS)
+        let logs = await ct.queryFilter(ct.filters.PacketSent(), parseInt(args.block))
+        console.log("packetsend logs num:", logs.length)
+        logargs = logs[0].args[0]
+        console.log("sequence", logargs.sequence.toString());
+        console.log("sourceChain", logargs.sourceChain)
+        console.log("destChain", logargs.destChain)
+        console.log("relayChain", logargs.relayChain)
+        console.log("ports", logargs.ports)
     })
 
 module.exports = {}
