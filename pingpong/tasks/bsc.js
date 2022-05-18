@@ -6,10 +6,7 @@
  */
 
 require("../hardhat.config");
-require('dotenv').config()
 
-let PingPongRCAddr = ""
-PingPongRCAddr = process.env.PINGPONG_BSC
 
 
 
@@ -27,31 +24,28 @@ task("callRemotePing", "callRemotePing")
         const factory = await hre.ethers.getContractFactory('PingPongRC')
         let ct;
 
-        if (PingPongRCAddr === '') {
+        if (process.env.BSC_PINGPONG === '') {
             ct = await factory.deploy(process.env.RCC_ADDRESS);
             await ct.deployed();
         } else {
-            ct = await factory.attach(String(PingPongRCAddr));
+            ct = await factory.attach(String(process.env.BSC_PINGPONG));
         }
 
-        feedata.value = 1000;
+        feedata.value = hre.ethers.utils.parseUnits("0", "gwei");
         feedata.gasLimit = 5000000;
         console.log("feedata", feedata)
 
 
         // method args
         let callArgs = [
-            process.env.PINGPONG_TELE,//target contract addr
+            process.env.TELE_PINGPONG,//target contract addr
             process.env.TARGET_CHAIN, //target chain
             '',                       // relay chain
             hre.ethers.constants.AddressZero, // fee address
-            1000,]                              // 
+            feedata.value,]
+        console.log("call args", callArgs)                           // 
         const result = await ct.callRemotePing(
-            process.env.PINGPONG_TELE,
-            process.env.TARGET_CHAIN,
-            '',
-            hre.ethers.constants.AddressZero,
-            1000,
+            ...callArgs,
             feedata);
         let receipt = await result.wait()
         console.log("receipt", receipt)
@@ -74,5 +68,7 @@ task("getSendPacketEvent", "")
         console.log("relayChain", logargs.relayChain)
         console.log("ports", logargs.ports)
     })
+
+
 
 module.exports = {}

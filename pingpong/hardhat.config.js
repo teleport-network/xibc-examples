@@ -1,4 +1,5 @@
-require("./tasks/test");
+require("./tasks/bsc");
+require("./tasks/tele");
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("@tenderly/hardhat-tenderly");

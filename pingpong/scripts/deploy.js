@@ -15,8 +15,15 @@ async function main() {
   console.log("gasPrice", hre.ethers.utils.formatUnits(gasData.gasPrice, "gwei"), "gwei");
 
   const PingPongRC = await hre.ethers.getContractFactory("PingPongRC");
-  const ct = await PingPongRC.deploy(process.env.RCC_ADDRESS, gasData);
-  await ct.deployed();
+  let ct;
+  if (hre.network.name === 'bsc') {
+    ct = await PingPongRC.deploy(process.env.BSC_RCC_ADDRESS, gasData);
+    await ct.deployed();
+  } else {
+    ct = await PingPongRC.deploy(process.env.TELE_RCC_ADDRESS, gasData);
+    await ct.deployed();
+  }
+
 
   console.log("network:", hre.network.name, "PingPongRC deployed to:", ct.address);
   // await hre.tenderly.persistArtifacts({
@@ -35,6 +42,3 @@ main()
     process.exit(1);
   });
 
-
-// bsc:0x6BC6226CD68d8C9327e135ABB5241B3FDEe7e9e1
-// tele:0xDE15CBA96deAD6Bdd201aa27fc19e15F2bAB6D02
