@@ -1,5 +1,4 @@
-require("./tasks/bsc");
-require("./tasks/tele");
+require("./tasks/test");
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("@tenderly/hardhat-tenderly");
@@ -34,7 +33,8 @@ module.exports = {
     tele: {
       url: "https://evm-rpc.testnet.teleport.network",
       chainId: 8001,
-      accounts: [process.env.PRIV_KEY]
+      accounts: [process.env.PRIV_KEY],
+      hello: "hello"
     }
   },
   etherscan: {
