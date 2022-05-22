@@ -1,9 +1,6 @@
 require("./tasks/test");
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
-require("@tenderly/hardhat-tenderly");
-require("@nomiclabs/hardhat-web3");
-require("@nomiclabs/hardhat-etherscan");
 require('dotenv').config()
 
 module.exports = {

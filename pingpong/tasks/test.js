@@ -15,23 +15,32 @@ task("callRemotePing", "callRemotePing")
     .setAction(async (args, hre) => {
 
 
-        let feedata = await ethers.provider.getFeeData()
+        let txCfg = await ethers.provider.getFeeData()
+        txCfg.nonce = await hre.ethers.provider.getTransactionCount(process.env.PUBKEY)
+        // @notice The multiplier is different in different networks; 50 is the value under rinkeby.
+        // txCfg.maxFeePerGas = txCfg.maxFeePerGas.mul(50);
+        // txCfg.maxPriorityFeePerGas = txCfg.maxPriorityFeePerGas.mul(50);
+        if (txCfg.maxFeePerGas != null) {
+            delete txCfg.gasPrice
+        }
         const factory = await hre.ethers.getContractFactory('PingPongRC')
-        let ct = await factory.attach(String(process.env.BSC_PINGPONG));
+        let cts = utils.getChainContract(hre.network.name)
+
+        let ct = await factory.attach(cts.pingpong);
 
 
         if (args.feeaddr === '0x') {
-            feedata.value = hre.ethers.utils.parseUnits(args.feeamount, "ether");
+            txCfg.value = hre.ethers.utils.parseUnits(args.feeamount, "ether");
         }
 
-        feedata.gasLimit = 20000000;
-        console.log("feedata", feedata)
+        txCfg.gasLimit = 20000000;
+        console.log("txCfg", txCfg)
 
 
         let contracts = utils.getChainContract(hre.network.name)
 
         let callArgs = [
-            contracts.pingpong,
+            cts.pingpong,
             args.destchain,
             args.relaychain,
             args.feeaddr === '0x' ? hre.ethers.constants.AddressZero : args.feeaddr,
@@ -40,7 +49,7 @@ task("callRemotePing", "callRemotePing")
         console.log("call args", callArgs)                           // 
         const result = await ct.callRemotePing(
             ...callArgs,
-            feedata);
+            txCfg);
         let receipt = await result.wait()
         console.log("receipt", receipt)
 
@@ -74,6 +83,16 @@ task("getReceived", "")
         let ct = factory.attach(cts.pingpong)
         console.log("received:", await ct.received(args.index))
     })
+
+task("parse","")
+.setAction(async (args, hre) => {
+    // 0x381e25efbdbfefa597f65a36160668913f41ea66f628c29d9960717c1aea10aa
+    let ans = await hre.provider.getTransactionReceipt("0x381e25efbdbfefa597f65a36160668913f41ea66f628c29d9960717c1aea10aa")
+    // decode 
+
+
+
+})
 
 
 module.exports = {}
