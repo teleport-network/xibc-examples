@@ -1,20 +1,40 @@
+// require("./tasks/test");
 require("@nomiclabs/hardhat-waffle");
+require("@nomiclabs/hardhat-ethers");
+require('dotenv').config()
 
-
-
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
-
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
 module.exports = {
   solidity: {
-    compilers: [
-      {
-        version: '0.6.8',
-      }
-    ]
+    version: '0.6.8',
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 1000,
+      },
+    }
+  },
+  defaultNetwork: "bsc",
+  networks: {
+    rinkeby: {
+      url: process.env.INFURA,
+      chainId: 4,
+      accounts: [process.env.PRIV_KEY]
+    },
+    bsc: {
+      url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
+      chainId: 97,
+      gas: 4100000,
+      // nonce:
+      accounts: [process.env.PRIV_KEY]
+    },
+    tele: {
+      url: "https://evm-rpc.testnet.teleport.network",
+      chainId: 8001,
+      accounts: [process.env.PRIV_KEY],
+      hello: "hello"
+    }
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY
   }
-
 };
