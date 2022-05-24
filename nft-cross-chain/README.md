@@ -13,3 +13,6 @@ NFT is composed  of id and uri.
 * uri is the off-chain representation.
 
 ![](./imgs/asset_flow.png)
+
+# StateMachine 
+![](./imgs/state_machine.png)

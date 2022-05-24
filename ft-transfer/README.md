@@ -12,7 +12,7 @@
 
 # Interaction sample figure
 
-![interaction sample figure](/Users/millionairez/davionlabs/xibc-apps/ft-transfer/imgs/interaction_sample.png)
+![interaction sample figure](./imgs/interaction_sample.png)
 
 # Asset flow
 ![资产流动图](./imgs/asset-flow.png)
