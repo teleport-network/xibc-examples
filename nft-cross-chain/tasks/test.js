@@ -1,6 +1,3 @@
-
-
-require("../hardhat.config");
 let utils = require("./utils")
 
 
@@ -68,5 +65,9 @@ task("getSendPacketEvent", "")
         console.log("ports", logargs.ports)
     })
 
-
+task("hardhatWork", "test if hardhatwork on one chain likes bsc, rinkeby...")
+    .setAction(async (args, hre) => {
+        console.log("test network", hre.network.name)
+        console.log(await hre.ethers.provider.getBlockNumber())
+    })
 module.exports = {}
