@@ -11,7 +11,7 @@ task("crosschain", "call crosschain")
 
 
         let txCfg = await ethers.provider.getFeeData()
-        txCfg.nonce = await hre.ethers.provider.getTransactionCount(process.env.PUBKEY)
+        txCfg.nonce = await hre.ethers.provider.getTransactionCount((new ethers.Wallet(process.env.PRIV_KEY)).address)
         // @notice The multiplier is different in different networks; 50 is the value under rinkeby.
         // txCfg.maxFeePerGas = txCfg.maxFeePerGas.mul(50);
         // txCfg.maxPriorityFeePerGas = txCfg.maxPriorityFeePerGas.mul(50);

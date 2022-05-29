@@ -16,3 +16,18 @@ NFT is composed  of id and uri.
 
 # StateMachine 
 ![](./imgs/state_machine.png)
+
+
+
+# Using  the example
+
+1. cp `.env.example` to `.env` and  fill `.env` with yours config
+2. commands
+
+```bash
+# setup enviroment
+yarn 
+# send nft cross-chain
+yarn hardhat crosschain --id <yours> --destchain <yours> --relaychain <yours> --feeaddr <yours> --feeamount	<yours>
+```
+
