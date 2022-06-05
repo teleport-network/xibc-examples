@@ -51,7 +51,7 @@ function deploy(name, args) {
     console.log(await ct.deployTransaction.wait())
     console.log("network:", hre.network.name, name + " deployed to:", ct.address)
 
-    return ct.address
+    return ct
 
 }
 
