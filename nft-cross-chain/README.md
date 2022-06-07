@@ -29,5 +29,7 @@ NFT is composed  of id and uri.
 yarn 
 # send nft cross-chain
 yarn hardhat crosschain --id <yours> --destchain <yours> --relaychain <yours> --feeaddr <yours> --feeamount	<yours>
+
 ```
 
+3. 

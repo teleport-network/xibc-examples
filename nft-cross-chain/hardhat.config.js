@@ -28,11 +28,15 @@ module.exports = {
 
       accounts: [process.env.PRIV_KEY]
     },
-    tele: {
+    teleport: {
       url: "https://evm-rpc.testnet.teleport.network",
       chainId: 8001,
       accounts: [process.env.PRIV_KEY],
-      hello: "hello"
+    },
+    arbitrum: {
+      url: "https://rinkeby.arbitrum.io/rpc",
+      chainId: 421611,
+      accounts: [process.env.PRIV_KEY],
     }
   },
   etherscan: {

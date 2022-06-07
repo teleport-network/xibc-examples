@@ -8,6 +8,7 @@ import "xibc-contracts/evm/contracts/libraries/app/RCC.sol";
 import "xibc-contracts/evm/contracts/libraries/packet/Packet.sol";
 import "xibc-contracts/evm/contracts/libraries/utils/Bytes.sol";
 import {Strings as xibcStrings} from "xibc-contracts/evm/contracts/libraries/utils/Strings.sol";
+import {Packet} from "xibc-contracts/evm/contracts/core/packet/Packet.sol";
 
 import "@openzeppelin/contracts/token/ERC721/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -34,9 +35,11 @@ contract CC721 is ERC721Burnable, Ownable {
     // mark nft from otherchain
     // tokenID => another chain id
 
-    mapping(uint256 => Info) enter;
+    mapping(uint256 => Info) public enter;
     // mark nft out to otherchain
-    mapping(uint256 => address) out;
+    mapping(uint256 => address) public out;
+    // latest token id in
+    uint256 public latestIn;
 
     // modifier onlyWhitelist(RCCDataTypes.RCCPacketData memory packet) {
     //     require(
@@ -45,6 +48,9 @@ contract CC721 is ERC721Burnable, Ownable {
     //     );
     //     _;
     // }
+    // tp = [0,1] 0:back 1:in
+    //
+    // event OnCrossChain(uint256 tp,uint256 oriId,uint256 nowId);
 
     /**
      * @param _rcc remote contract call address
@@ -80,7 +86,7 @@ contract CC721 is ERC721Burnable, Ownable {
         uint256 id,
         address target,
         string calldata destChain,
-        // string calldata relayChain,
+        string calldata relayChain,
         address feeAddr,
         uint256 feeAmount
     ) external payable {
@@ -113,7 +119,7 @@ contract CC721 is ERC721Burnable, Ownable {
             target.addressToString(),
             reqBytes,
             destChain,
-            ""
+            relayChain
         );
         PacketTypes.Fee memory fee = PacketTypes.Fee(feeAddr, feeAmount);
 
@@ -121,12 +127,13 @@ contract CC721 is ERC721Burnable, Ownable {
     }
 
     function onCrossChain(uint256 id) external {
-        // check packet if from trusted nft contract
         RCCDataTypes.RCCPacketData memory packet = rcc.getLatestPacket();
-        require(
-            whitelist[getWhiteListKey(packet.srcChain, packet.sender)],
-            "contract no permission"
-        );
+        // @notice: For testing purposes, I commented out the cross-chain permissions validation
+        // check packet if from trusted nft contract
+        // require(
+        //     whitelist[getWhiteListKey(packet.srcChain, packet.sender)],
+        //     "contract no permission"
+        // );
 
         // back
         if (out[id] != address(0)) {
@@ -137,6 +144,7 @@ contract CC721 is ERC721Burnable, Ownable {
             uint256 _id = _tokenIdCounter.current();
             _tokenIdCounter.increment();
             enter[_id] = Info(id, packet.srcChain);
+            latestIn = id;
         }
     }
 

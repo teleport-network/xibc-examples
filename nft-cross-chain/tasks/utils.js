@@ -3,7 +3,7 @@
 function getChainContract(networkName) {
     ans = {}
     switch (networkName) {
-        case 'tele':
+        case 'teleport':
             ans.cc721 = process.env.TELE_CC721
             ans.rcc = process.env.TELE_RCC_ADDRESS
             ans.packet = process.env.TELE_PACKET_ADDRESS
@@ -17,6 +17,11 @@ function getChainContract(networkName) {
             ans.cc721 = process.env.RIN_CC721
             ans.rcc = process.env.RIN_RCC_ADDRESS
             ans.packet = process.env.RIN_PACKET_ADDRESS
+            break
+        case 'arbitrum':
+            ans.cc721 = process.env.ARB_CC721
+            ans.rcc = process.env.ARB_RCC_ADDRESS
+            ans.packet = process.env.ARB_PACKET_ADDRESS
             break
         default:
             console.log("unsupport network")

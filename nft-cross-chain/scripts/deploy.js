@@ -1,7 +1,7 @@
 
 const hre = require("hardhat");
 require('dotenv').config()
-// let utils = require("../tasks/utils")
+let utils = require("../tasks/utils")
 
 async function main() {
 
@@ -29,7 +29,6 @@ async function main() {
 
 
     let ct = await CC721.deploy(cts.rcc, gasData);
-    console.log(ct.deployTransaction)
     console.log(await ct.deployTransaction.wait())
     console.log("network:", hre.network.name, "CC721 deployed to:", ct.address)
 }

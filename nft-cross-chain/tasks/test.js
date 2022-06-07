@@ -8,8 +8,6 @@ task("crosschain", "call crosschain")
     .addParam("feeaddr", "relay fee token address.give 0x if using native token")
     .addParam("feeamount", "fee amount,using ether unit,can be decimals like 0.00001 or 1 etc")
     .setAction(async (args, hre) => {
-
-
         let txCfg = await ethers.provider.getFeeData()
         txCfg.nonce = await hre.ethers.provider.getTransactionCount((new ethers.Wallet(process.env.PRIV_KEY)).address)
         // @notice The multiplier is different in different networks; 50 is the value under rinkeby.
@@ -20,7 +18,7 @@ task("crosschain", "call crosschain")
         }
         const factory = await hre.ethers.getContractFactory('CC721')
         let cts = utils.getChainContract(hre.network.name)
-
+        let targetCts = utils.getChainContract(args.destchain)
         let ct = await factory.attach(cts.cc721);
 
 
@@ -33,11 +31,12 @@ task("crosschain", "call crosschain")
 
 
         let callArgs = [
-            cts.cc721,
+            args.id,
+            targetCts.cc721,
             args.destchain,
             args.relaychain,
             args.feeaddr === '0x' ? hre.ethers.constants.AddressZero : args.feeaddr,
-            args.feeamount,]
+            txCfg.value,]
 
         console.log("call args", callArgs)                           // 
         const result = await ct.crossChain(
@@ -48,6 +47,35 @@ task("crosschain", "call crosschain")
 
     })
 
+task("latestIn", "")
+    .setAction(async (args, hre) => {
+        let fa = await hre.ethers.getContractFactory("CC721")
+        let cts = utils.getChainContract(hre.network.name)
+        let ct = await fa.attach(cts.cc721)
+        console.log("latestIn:", await ct.latestIn())
+
+    })
+
+task("mint", "mint nft to your address that you send tx")
+    .setAction(async (args, hre) => {
+        const [signer] = await ethers.getSigners();
+        let fa = await hre.ethers.getContractFactory('CC721')
+        let cts = utils.getChainContract(hre.network.name)
+        let ct = await fa.attach(cts.cc721)
+        let tx = await ct.safeMint(signer.address);
+        let receipt = await tx.wait();
+
+        console.log(tx)
+        console.log(receipt)
+
+        console.log(receipt.events)
+        receipt.events.forEach((v, i, arr) => {
+            console.log("eventSig:", v.eventSignature)
+            console.log(v.args)
+            console.log("\n\n\n")
+        })
+
+    })
 // task for get packge event from x block
 task("getSendPacketEvent", "")
     .addParam("block", "")
@@ -63,6 +91,20 @@ task("getSendPacketEvent", "")
         console.log("destChain", logargs.destChain)
         console.log("relayChain", logargs.relayChain)
         console.log("ports", logargs.ports)
+    })
+
+task("queryReceipt", "query recipt")
+    // .addParam("packet", "packet address")
+    .addParam("sourcechain", "sourceChain")
+    .addParam("destchain", "sourceChain")
+    .addParam("sequence", "sourceChain")
+    .setAction(async (taskArgs, hre) => {
+        const packetFactory = await hre.ethers.getContractFactory('Packet')
+        let cts = utils.getChainContract(hre.network.name)
+        const packet = await packetFactory.attach(cts.packet)
+        let key = taskArgs.sourcechain + "/" + taskArgs.destchain + "/" + taskArgs.sequence
+        let packetRec = await packet.receipts(Buffer.from(key, "utf-8"))
+        console.log("receipted:", packetRec)
     })
 
 task("hardhatWork", "test if hardhatwork on one chain likes bsc, rinkeby...")
