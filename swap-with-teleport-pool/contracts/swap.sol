@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-
+// @Deprecated
 contract SwapAgent is Ownable {
     // For the scope of these swap examples,
     // we will detail the design considerations when using

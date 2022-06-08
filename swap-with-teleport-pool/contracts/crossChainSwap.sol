@@ -9,8 +9,12 @@ import "xibc-contracts/evm/contracts/libraries/utils/Bytes.sol";
 import "xibc-contracts/evm/contracts/libraries/app/RCC.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "hardhat/console.sol";
+
+import "xibc-contracts/evm/contracts/core/packet/Packet.sol";
 
 contract CrossChainSwap {
     using Bytes for bytes;
@@ -18,24 +22,27 @@ contract CrossChainSwap {
     IMultiCall muticallIns =
         IMultiCall(0x11cA96C4b71a3B26ABA55b6AD632c3CC4cF03aa8);
     address constant RIN_USDT = 0xB0Dfaaa92e4F3667758F2A864D50F94E8aC7a56B;
-    address constant RIN_TEST = 0xB0Dfaaa92e4F3667758F2A864D50F94E8aC7a56B;
+    address constant RIN_TEST = 0x0bD0921cc3F7441D5ca01758dbc4d927b6a558f1;
     address constant RIN_SWAP_REVEIVER =
         0x7e01879e94241c8A022Cb6708C7F241f86039Ff6;
     address constant RIN_SWAP_ROUTER =
         0xE592427A0AEce92De3Edee1F18E0157C05861564;
-    uint256 constant SWAP_AMOUNT_IN = 10e18;
-
+    uint256 constant TRANS_AMOUNT = 21e18;
+    uint256 constant FEE_AMOUNT = 10e18;
     address constant TELE_USDT = 0x80aae951aC9BC48f42B950Fe33385E8900149912;
-
     string constant TELE_MUTICALL =
         "0x0000000000000000000000000000000030000003";
     string constant TELE_RCC = "0x0000000000000000000000000000000030000002";
+    string constant RIN_RCC = "0x8280f4aeda688ce9394736df4cb33b01a9ada0f4";
 
-    constructor(address _target) public {}
+    address constant ARB_USDT = 0x2436DE6B227eEfc84245260f74f096136b217093;
 
+    constructor() public {}
+
+    // we need to construct two multicall packets , one is  source chain to teleport, and another one is teleport to destchain.
     function remoteSwap() external {
         /**
-         * construct multicall to rinkeby
+         * construct multicall packet from teleport to rinkeby
          * 1. transfer to rcc contract
          * 2. rcc approve token
          * 3. rcc call swap method of uniswap
@@ -44,29 +51,29 @@ contract CrossChainSwap {
         MultiCallDataTypes.TransferData
             memory rinTransferData = MultiCallDataTypes.TransferData({
                 tokenAddress: TELE_USDT,
-                receiver: "0x8280f4aeda688ce9394736df4cb33b01a9ada0f4",
-                amount: 20e18
+                receiver: RIN_RCC,
+                amount: TRANS_AMOUNT
             });
 
         // 2.
         MultiCallDataTypes.RCCData[]
             memory teleRccDatas = new MultiCallDataTypes.RCCData[](2);
         teleRccDatas[0] = MultiCallDataTypes.RCCData(
-            "0xb0dfaaa92e4f3667758f2a864d50f94e8ac7a56b",
+            Bytes.addressToString(RIN_USDT),
             abi.encodeWithSelector(
                 IERC20.approve.selector,
-                0xE592427A0AEce92De3Edee1F18E0157C05861564,
-                10e18
+                RIN_SWAP_ROUTER,
+                FEE_AMOUNT + TRANS_AMOUNT
             )
         );
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
             .ExactInputSingleParams({
                 tokenIn: RIN_USDT,
-                tokenOut: 0x0bD0921cc3F7441D5ca01758dbc4d927b6a558f1,
+                tokenOut: RIN_TEST,
                 fee: 5000,
                 recipient: RIN_SWAP_REVEIVER,
                 deadline: block.timestamp,
-                amountIn: SWAP_AMOUNT_IN,
+                amountIn: TRANS_AMOUNT,
                 amountOutMinimum: 0,
                 sqrtPriceLimitX96: 0
             });
@@ -87,30 +94,35 @@ contract CrossChainSwap {
             );
 
         /**
-         * construct multicall
+         * construct multicall to teleport
          * 1. transfer to rcc contract
          * 2. rcc call multicall
          */
-        PacketTypes.Fee memory fee = PacketTypes.Fee(TELE_USDT, 10e18);
+        PacketTypes.Fee memory feeTele = PacketTypes.Fee(TELE_USDT, FEE_AMOUNT);
         // 2. rcc call multicall
         bytes memory rccBytes = abi.encodeWithSelector(
             IMultiCall.multiCall.selector,
             teleMulticallData,
-            fee
+            feeTele
         );
         MultiCallDataTypes.RCCData[]
             memory rccDatas = new MultiCallDataTypes.RCCData[](1);
         rccDatas[0] = MultiCallDataTypes.RCCData(TELE_MUTICALL, rccBytes);
         MultiCallDataTypes.MultiCallData memory multicallData = getMulticallData(
             MultiCallDataTypes.TransferData({ //1. transfer to rcc contract
-                tokenAddress: TELE_USDT,
+                tokenAddress: ARB_USDT,
                 receiver: TELE_RCC,
-                amount: 20e18
+                amount: TRANS_AMOUNT
             }),
             rccDatas,
             "teleport"
         );
+        PacketTypes.Fee memory fee = PacketTypes.Fee(ARB_USDT, FEE_AMOUNT);
 
+        IERC20(ARB_USDT).approve(
+            address(muticallIns),
+            TRANS_AMOUNT + FEE_AMOUNT * 2
+        );
         muticallIns.multiCall(multicallData, fee);
     }
 
@@ -129,7 +141,7 @@ contract CrossChainSwap {
                 dataList[i] = abi.encode(transData);
             } else {
                 functions[i] = 1;
-                dataList[i] = abi.encode(rccDatas[i]);
+                dataList[i] = abi.encode(rccDatas[i - 1]);
             }
         }
 

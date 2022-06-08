@@ -1,21 +1,11 @@
-// require("./tasks/test");
+require("./tasks/test");
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
-require('hardhat-contract-sizer');
-
 require('dotenv').config()
 
 module.exports = {
   solidity: {
-    // version: '0.6.8',
-    compilers: [
-      {
-        version: "0.6.8",
-      },
-      {
-        version: "0.8.0",
-      }
-    ],
+    version: '0.6.8',
     settings: {
       optimizer: {
         enabled: true,
@@ -32,28 +22,28 @@ module.exports = {
     },
     bsc: {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
+      // url: "http://127.0.0.1:8545",
       chainId: 97,
       gas: 4100000,
-      // nonce:
+
       accounts: [process.env.PRIV_KEY]
     },
-    tele: {
+    teleport: {
       url: "https://evm-rpc.testnet.teleport.network",
       chainId: 8001,
       accounts: [process.env.PRIV_KEY],
     },
-    arb: {
+    arbitrum: {
       url: "https://rinkeby.arbitrum.io/rpc",
       chainId: 421611,
+      accounts: [process.env.PRIV_KEY],
+    },
+    localhost: {
+      url: "http://127.0.0.1:8545",
       accounts: [process.env.PRIV_KEY],
     }
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY
-  },
-  contractSizer: {
-    alphaSort: true,
-    runOnCompile: true,
-    disambiguatePaths: false,
-  },
+  }
 };

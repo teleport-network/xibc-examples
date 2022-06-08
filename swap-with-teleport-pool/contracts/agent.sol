@@ -9,6 +9,7 @@ import "xibc-contracts/evm/contracts/libraries/utils/Bytes.sol";
 import "xibc-contracts/evm/contracts/interfaces/IRCC.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+// @Deprecated
 // receive token & construct a muticall to swap token on uniswap on target chain
 contract Agent {
     using Bytes for bytes;

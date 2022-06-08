@@ -1,22 +1,24 @@
 function getChainContract(networkName) {
     ans = {}
     switch (networkName) {
-        case 'tele':
-            ans.cc721 = process.env.TELE_CC721
+        case 'teleport':
+            ans.swap = process.env.TELE_SWAP
             ans.rcc = process.env.TELE_RCC_ADDRESS
             ans.packet = process.env.TELE_PACKET_ADDRESS
             break
         case 'bsc':
-            ans.cc721 = process.env.BSC_CC721
+            ans.swap = process.env.BSC_SWAP
             ans.rcc = process.env.BSC_RCC_ADDRESS
             ans.packet = process.env.BSC_PACKET_ADDRESS
             break
         case 'rinkeby':
-            ans.cc721 = process.env.RIN_CC721
+            ans.swap = process.env.RIN_SWAP
             ans.rcc = process.env.RIN_RCC_ADDRESS
             ans.packet = process.env.RIN_PACKET_ADDRESS
             break
-        case 'arb':
+        case 'localhost':
+        case 'arbitrum':
+            ans.swap = process.env.ARB_SWAP
             ans.rcc = process.env.ARB_RCC_ADDRESS
             ans.packet = process.env.ARB_PACKET_ADDRESS
             break
@@ -26,7 +28,7 @@ function getChainContract(networkName) {
     }
     return ans
 }
-function deploy(name, args) {
+async function deploy(name, args) {
 
     // tx attributes warp
     let txWrap = await hre.ethers.provider.getFeeData()
@@ -34,7 +36,7 @@ function deploy(name, args) {
     // txWrap.maxPriorityFeePerGas = txWrap.maxPriorityFeePerGas.mul(50)
     // It's not clear that ether.js or Hardhat bugs cause nonce to be much larger than Minted TX.
     // Sometimes it occurs, so nonce reads from the chain can avoid problems.
-    txWrap.nonce = await hre.ethers.provider.getTransactionCount(await(await hre.ethers.getSigner()).getAddress())
+    txWrap.nonce = await hre.ethers.provider.getTransactionCount(await (await hre.ethers.getSigners()[0]).getAddress())
     console.log("txWrap", txWrap)
     if (txWrap.maxFeePerGas != null) {
         console.log("maxFeePerGas", hre.ethers.utils.formatUnits(txWrap.maxFeePerGas, "gwei"), "gwei")
