@@ -1,3 +1,4 @@
+const { createFixtureLoader } = require("ethereum-waffle");
 let utils = require("../scripts/utils")
 
 
@@ -18,17 +19,15 @@ task("remoteSwap", "call crosschain")
         let cts = utils.getChainContract(hre.network.name)
 
         // transfer usdt to workcontract
-        let usdtFa = await hre.ethers.getContractFactory('ERC20')
-        let usdt = usdtFa.attach('0x2436de6b227eefc84245260f74f096136b217093')
-        console.log("usdt transfer", await (await usdt.transfer(cts.swap, hre.ethers.utils.parseUnits("31")
+        let usdt = await hre.ethers.getContractAt('IERC20', cts.usdt)
+        console.log("usdt transfer", await (await usdt.transfer(cts.swap, hre.ethers.utils.parseUnits("13")
         )).wait())
 
 
 
         // call remoteSwap
-        txCfg.nonce = await hre.ethers.provider.getTransactionCount((new ethers.Wallet(process.env.PRIV_KEY)).address)
-        const factory = await hre.ethers.getContractFactory('CrossChainSwap')
-        let ct = await factory.attach(cts.swap);
+        txCfg.nonce = await hre.ethers.provider.getTransactionCount(signer.address)
+        const ct = await hre.ethers.getContractAt('CrossChainSwap', cts.swap)
 
 
         if (args.feeaddr === '0x') {
@@ -54,6 +53,60 @@ task("remoteSwap", "call crosschain")
 
     })
 
+
+//9999849.9 kutest
+//9799837.37303 USDT
+task("swap2hop", "")
+    .setAction(async (args, hre) => {
+        let txCfg = await ethers.provider.getFeeData()
+        let [signer] = await hre.ethers.getSigners();
+        txCfg.nonce = await hre.ethers.provider.getTransactionCount(signer.address)
+
+
+
+        // @notice The multiplier is different in different networks; 50 is the value under rinkeby.
+        // txCfg.maxFeePerGas = txCfg.maxFeePerGas.mul(50);
+        // txCfg.maxPriorityFeePerGas = txCfg.maxPriorityFeePerGas.mul(50);
+        if (txCfg.maxFeePerGas != null) {
+            delete txCfg.gasPrice
+        }
+        let cts = utils.getChainContract(hre.network.name)
+
+        // transfer usdt to workcontract
+        let usdt = await hre.ethers.getContractAt('IERC20', cts.usdt)
+        console.log("usdt transfer", await (await usdt.transfer(cts.swap, hre.ethers.utils.parseUnits("12")
+        )).wait())
+
+
+
+        // call remoteSwap
+        txCfg.nonce = await hre.ethers.provider.getTransactionCount(signer.address)
+        const factory = await hre.ethers.getContractFactory('CrossChainSwap')
+        let ct = await factory.attach(cts.swap);
+
+
+        if (args.feeaddr === '0x') {
+            txCfg.value = hre.ethers.utils.parseUnits(args.feeamount, "ether");
+        }
+
+        txCfg.gasLimit = 20000000;
+        console.log("txCfg", txCfg)
+
+
+        let callArgs = []
+
+        console.log("call args", callArgs)
+        const tx = await ct.callMulticallToSwap(
+            ...callArgs,
+            txCfg);
+        let receipt = await tx.wait()
+        console.log("receipt", receipt)
+        // console.log(receipt.events[8])
+        // parse packet event
+
+        // console.log(packetFa.interface.decodeEventLog("PacketSent", receipt.events[8].data, receipt.events[8].topics))
+
+    })
 task("latestIn", "")
     .setAction(async (args, hre) => {
         let fa = await hre.ethers.getContractFactory("CC721")
@@ -63,6 +116,66 @@ task("latestIn", "")
 
     })
 
+
+task("swapOnUni", "")
+    .setAction(async () => {
+
+
+        // ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
+        // .ExactInputSingleParams({
+        //     tokenIn: RIN_USDT,
+        //     tokenOut: RIN_TEST,
+        //     fee: 5000,
+        //     recipient: RIN_SWAP_REVEIVER,
+        //     deadline: block.timestamp,
+        //     amountIn: SWAP_AMOUNT,
+        //     amountOutMinimum: 0,
+        //     sqrtPriceLimitX96: 0
+        // });
+
+        // The call to `exactInputSingle` executes the swap.
+        // targetChainRccDatas[1] = MultiCallDataTypes.RCCData(
+        //     Bytes.addressToString(RIN_SWAP_ROUTER),
+        //     abi.encodeWithSelector(
+        //         ISwapRouter.exactInputSingle.selector,
+        //         params
+        //     )
+        // );
+
+        let [signer] = await hre.ethers.getSigners()
+        let feedata = await signer.getFeeData()
+
+        console.log('signer', signer.address)
+        let router = '0xE592427A0AEce92De3Edee1F18E0157C05861564'
+        let cts = await utils.getChainContract(hre.network.name)
+        console.log('cts', cts)
+        let usdt = await hre.ethers.getContractAt('IERC20', cts.usdt)
+        let test = await hre.ethers.getContractAt('IERC20', cts.test)
+        // 3000 0.3%
+        // 0.05 %
+
+        await usdt.approve(router, await hre.ethers.utils.parseUnits('10').add('50000'), { nonce: await signer.getTransactionCount(), gasPrice: feedata.gasPrice })
+
+        let routerIns = await hre.ethers.getContractAt('ISwapRouter', router)
+        console.log("swap前 TEST余额", await test.balanceOf(signer.address))
+        await routerIns.exactInputSingle({
+            tokenIn: cts.usdt,
+            tokenOut: cts.test,
+            fee: 500,
+            recipient: signer.address,
+            deadline: Date.now() / 1000 | 0 + 600,
+            amountIn: hre.ethers.utils.parseUnits('10'),
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+        },
+            {
+                gasLimit: 4000000,
+                nonce: await signer.getTransactionCount()
+            })
+
+        console.log("swap后 TEST余额", await test.balanceOf(signer.address))
+
+    })
 task("mint", "mint nft to your address that you send tx")
     .setAction(async (args, hre) => {
         const [signer] = await ethers.getSigners();
@@ -118,6 +231,19 @@ task("hardhatWork", "test if hardhatwork on one chain likes bsc, rinkeby...")
     .setAction(async (args, hre) => {
         console.log("test network", hre.network.name)
         console.log(await hre.ethers.provider.getBlockNumber())
+    })
+
+
+task("parsePacket", "")
+    .setAction(async (args, hre) => {
+        let fa = await hre.ethers.getContractFactory('Packet')
+        console.log(fa)
+        let interface = fa.interface
+        interface.decodeFunctionData()
+
+        // let packetArti = await hre.artifacts.readArtifact("Packet")
+        // let interface = await hre.ethers.utils.Interface(packetArti.abi)
+        // console.log(interface.fragments)
     })
 
 

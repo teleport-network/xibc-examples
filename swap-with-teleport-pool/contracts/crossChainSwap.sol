@@ -27,15 +27,18 @@ contract CrossChainSwap {
         0x7e01879e94241c8A022Cb6708C7F241f86039Ff6;
     address constant RIN_SWAP_ROUTER =
         0xE592427A0AEce92De3Edee1F18E0157C05861564;
-    uint256 constant TRANS_AMOUNT = 21e18;
-    uint256 constant FEE_AMOUNT = 10e18;
     address constant TELE_USDT = 0x80aae951aC9BC48f42B950Fe33385E8900149912;
     string constant TELE_MUTICALL =
         "0x0000000000000000000000000000000030000003";
+    address constant TELE_MUTICALL_ADDR =
+        0x0000000000000000000000000000000030000003;
     string constant TELE_RCC = "0x0000000000000000000000000000000030000002";
     string constant RIN_RCC = "0x8280f4aeda688ce9394736df4cb33b01a9ada0f4";
 
     address constant ARB_USDT = 0x2436DE6B227eEfc84245260f74f096136b217093;
+    uint256 constant SWAP_AMOUNT = 10e18;
+    uint256 constant FEE_AMOUNT = 1e18;
+    uint256 constant POOL_FEE = 500;
 
     constructor() public {}
 
@@ -52,34 +55,34 @@ contract CrossChainSwap {
             memory rinTransferData = MultiCallDataTypes.TransferData({
                 tokenAddress: TELE_USDT,
                 receiver: RIN_RCC,
-                amount: TRANS_AMOUNT
+                amount: SWAP_AMOUNT + POOL_FEE
             });
 
         // 2.
         MultiCallDataTypes.RCCData[]
-            memory teleRccDatas = new MultiCallDataTypes.RCCData[](2);
-        teleRccDatas[0] = MultiCallDataTypes.RCCData(
+            memory targetChainRccDatas = new MultiCallDataTypes.RCCData[](2);
+        targetChainRccDatas[0] = MultiCallDataTypes.RCCData(
             Bytes.addressToString(RIN_USDT),
             abi.encodeWithSelector(
                 IERC20.approve.selector,
                 RIN_SWAP_ROUTER,
-                FEE_AMOUNT + TRANS_AMOUNT
+                SWAP_AMOUNT + POOL_FEE
             )
         );
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
             .ExactInputSingleParams({
                 tokenIn: RIN_USDT,
                 tokenOut: RIN_TEST,
-                fee: 5000,
+                fee: 500,
                 recipient: RIN_SWAP_REVEIVER,
-                deadline: block.timestamp,
-                amountIn: TRANS_AMOUNT,
+                deadline: type(uint256).max,
+                amountIn: SWAP_AMOUNT,
                 amountOutMinimum: 0,
                 sqrtPriceLimitX96: 0
             });
 
         // The call to `exactInputSingle` executes the swap.
-        teleRccDatas[1] = MultiCallDataTypes.RCCData(
+        targetChainRccDatas[1] = MultiCallDataTypes.RCCData(
             Bytes.addressToString(RIN_SWAP_ROUTER),
             abi.encodeWithSelector(
                 ISwapRouter.exactInputSingle.selector,
@@ -87,32 +90,41 @@ contract CrossChainSwap {
             )
         );
         MultiCallDataTypes.MultiCallData
-            memory teleMulticallData = getMulticallData(
+            memory targetChainMulticallData = getMulticallData(
                 rinTransferData,
-                teleRccDatas,
+                targetChainRccDatas,
                 "rinkeby"
             );
 
         /**
          * construct multicall to teleport
          * 1. transfer to rcc contract
+         * 2. approve usdt to muticall
          * 2. rcc call multicall
          */
         PacketTypes.Fee memory feeTele = PacketTypes.Fee(TELE_USDT, FEE_AMOUNT);
         // 2. rcc call multicall
         bytes memory rccBytes = abi.encodeWithSelector(
             IMultiCall.multiCall.selector,
-            teleMulticallData,
+            targetChainMulticallData,
             feeTele
         );
         MultiCallDataTypes.RCCData[]
-            memory rccDatas = new MultiCallDataTypes.RCCData[](1);
-        rccDatas[0] = MultiCallDataTypes.RCCData(TELE_MUTICALL, rccBytes);
+            memory rccDatas = new MultiCallDataTypes.RCCData[](2);
+        rccDatas[0] = MultiCallDataTypes.RCCData(
+            Bytes.addressToString(TELE_USDT),
+            abi.encodeWithSelector(
+                IERC20.approve.selector,
+                TELE_MUTICALL_ADDR,
+                SWAP_AMOUNT + POOL_FEE + FEE_AMOUNT
+            )
+        );
+        rccDatas[1] = MultiCallDataTypes.RCCData(TELE_MUTICALL, rccBytes);
         MultiCallDataTypes.MultiCallData memory multicallData = getMulticallData(
             MultiCallDataTypes.TransferData({ //1. transfer to rcc contract
                 tokenAddress: ARB_USDT,
                 receiver: TELE_RCC,
-                amount: TRANS_AMOUNT
+                amount: SWAP_AMOUNT + POOL_FEE + FEE_AMOUNT
             }),
             rccDatas,
             "teleport"
@@ -121,9 +133,64 @@ contract CrossChainSwap {
 
         IERC20(ARB_USDT).approve(
             address(muticallIns),
-            TRANS_AMOUNT + FEE_AMOUNT * 2
+            SWAP_AMOUNT + 2 * FEE_AMOUNT + POOL_FEE
         );
         muticallIns.multiCall(multicallData, fee);
+    }
+
+    function callMulticallToSwap() external {
+        MultiCallDataTypes.TransferData
+            memory rinTransferData = MultiCallDataTypes.TransferData({
+                tokenAddress: TELE_USDT,
+                receiver: RIN_RCC,
+                amount: SWAP_AMOUNT + POOL_FEE
+            });
+
+        // 2.
+        MultiCallDataTypes.RCCData[]
+            memory targetChainRccDatas = new MultiCallDataTypes.RCCData[](2);
+        targetChainRccDatas[0] = MultiCallDataTypes.RCCData(
+            Bytes.addressToString(RIN_USDT),
+            abi.encodeWithSelector(
+                IERC20.approve.selector,
+                RIN_SWAP_ROUTER,
+                SWAP_AMOUNT + POOL_FEE
+            )
+        );
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
+            .ExactInputSingleParams({
+                tokenIn: RIN_USDT,
+                tokenOut: RIN_TEST,
+                fee: 500,
+                recipient: RIN_SWAP_REVEIVER,
+                deadline: type(uint256).max,
+                amountIn: SWAP_AMOUNT,
+                amountOutMinimum: 0,
+                sqrtPriceLimitX96: 0
+            });
+        // The call to `exactInputSingle` executes the swap.
+        targetChainRccDatas[1] = MultiCallDataTypes.RCCData(
+            Bytes.addressToString(RIN_SWAP_ROUTER),
+            abi.encodeWithSelector(
+                ISwapRouter.exactInputSingle.selector,
+                params
+            )
+        );
+        MultiCallDataTypes.MultiCallData
+            memory targetChainMulticallData = getMulticallData(
+                rinTransferData,
+                targetChainRccDatas,
+                "rinkeby"
+            );
+        PacketTypes.Fee memory feeTele = PacketTypes.Fee(TELE_USDT, FEE_AMOUNT);
+        IERC20(TELE_USDT).approve(
+            0x0000000000000000000000000000000030000003,
+            SWAP_AMOUNT + FEE_AMOUNT + POOL_FEE
+        );
+        IMultiCall teleMulticallIns = IMultiCall(
+            0x0000000000000000000000000000000030000003
+        );
+        teleMulticallIns.multiCall(targetChainMulticallData, feeTele);
     }
 
     //

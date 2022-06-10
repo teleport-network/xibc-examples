@@ -3,24 +3,28 @@ function getChainContract(networkName) {
     switch (networkName) {
         case 'teleport':
             ans.swap = process.env.TELE_SWAP
-            ans.rcc = process.env.TELE_RCC_ADDRESS
-            ans.packet = process.env.TELE_PACKET_ADDRESS
+            ans.rcc = process.env.TELE_RCC
+            ans.packet = process.env.TELE_PACKET
+            ans.usdt = process.env.TELE_USDT
             break
         case 'bsc':
             ans.swap = process.env.BSC_SWAP
-            ans.rcc = process.env.BSC_RCC_ADDRESS
-            ans.packet = process.env.BSC_PACKET_ADDRESS
-            break
-        case 'rinkeby':
-            ans.swap = process.env.RIN_SWAP
-            ans.rcc = process.env.RIN_RCC_ADDRESS
-            ans.packet = process.env.RIN_PACKET_ADDRESS
+            ans.rcc = process.env.BSC_RCC
+            ans.packet = process.env.BSC_PACKET
             break
         case 'localhost':
+        case 'rinkeby':
+            ans.swap = process.env.RIN_SWAP
+            ans.rcc = process.env.RIN_RCC
+            ans.packet = process.env.RIN_PACKET
+            ans.usdt = process.env.RIN_USDT
+            ans.test = process.env.RIN_TEST
+            break
         case 'arbitrum':
             ans.swap = process.env.ARB_SWAP
-            ans.rcc = process.env.ARB_RCC_ADDRESS
-            ans.packet = process.env.ARB_PACKET_ADDRESS
+            ans.rcc = process.env.ARB_RCC
+            ans.packet = process.env.ARB_PACKET
+            ans.usdt = process.env.ARB_USDT
             break
         default:
             console.log("unsupport network")
