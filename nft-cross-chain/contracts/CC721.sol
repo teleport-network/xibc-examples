@@ -39,7 +39,7 @@ contract CC721 is ERC721Burnable, Ownable {
     // mark nft out to otherchain
     mapping(uint256 => address) public out;
     // latest token id in
-    uint256 public latestIn;
+    uint256 public latestMint;
 
     // modifier onlyWhitelist(RCCDataTypes.RCCPacketData memory packet) {
     //     require(
@@ -88,7 +88,8 @@ contract CC721 is ERC721Burnable, Ownable {
         string calldata destChain,
         string calldata relayChain,
         address feeAddr,
-        uint256 feeAmount
+        uint256 feeAmount,
+        address receiver
     ) external payable {
         // check permission
         require(_isApprovedOrOwner(msg.sender, id), "no permission");
@@ -106,14 +107,15 @@ contract CC721 is ERC721Burnable, Ownable {
             delete enter[id];
         } else {
             // lock
-            _transfer(msg.sender, address(rcc), id);
+            _transfer(msg.sender, address(this), id);
             crossChainID = id;
             out[id] = msg.sender;
         }
         // construct rcc req data
         bytes memory reqBytes = abi.encodeWithSelector(
             this.onCrossChain.selector,
-            crossChainID
+            crossChainID,
+            receiver
         );
         RCCDataTypes.RCCData memory rccData = RCCDataTypes.RCCData(
             target.addressToString(),
@@ -126,7 +128,7 @@ contract CC721 is ERC721Burnable, Ownable {
         rcc.sendRemoteContractCall{value: msg.value}(rccData, fee);
     }
 
-    function onCrossChain(uint256 id) external {
+    function onCrossChain(uint256 id, address receiver) external {
         RCCDataTypes.RCCPacketData memory packet = rcc.getLatestPacket();
         // @notice: For testing purposes, I commented out the cross-chain permissions validation
         // check packet if from trusted nft contract
@@ -137,14 +139,14 @@ contract CC721 is ERC721Burnable, Ownable {
 
         // back
         if (out[id] != address(0)) {
-            _transfer(msg.sender, out[id], id);
+            _transfer(address(this), out[id], id);
             delete out[id];
         } else {
             //cross-chain to
             uint256 _id = _tokenIdCounter.current();
-            _tokenIdCounter.increment();
+            safeMint(receiver);
             enter[_id] = Info(id, packet.srcChain);
-            latestIn = id;
+            latestMint = _id;
         }
     }
 

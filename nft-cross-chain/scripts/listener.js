@@ -5,8 +5,8 @@ async function main() {
     let packetFactory = await hre.ethers.getContractFactory("Packet")
     let cts = utils.getChainContract(hre.network.name)
     let packetCt = packetFactory.attach(cts.packet)
-    // let cc721Factory = await hre.ethers.getContractFactory("CC721")
-    // let cc721Ct = cc721Factory.attach(cts.cc721)
+    let cc721Factory = await hre.ethers.getContractFactory("CC721")
+    let cc721Ct = cc721Factory.attach(cts.cc721)
     console.log("start listen PacketSent:", cts.packet)
     console.log("start listen AckPacket:", cts.packet)
     // console.log("start listen RccPing:", cts.rcc)
@@ -27,6 +27,10 @@ async function main() {
         console.log(packet, acknowledgement)
         console.log("===============end AckPacket ==================\n")
     })
+
+    // packetCt.on("Transfer",()=>{
+
+    // })
 
 
 }

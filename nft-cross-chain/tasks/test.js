@@ -5,6 +5,7 @@ task("crosschain", "call crosschain")
     .addParam("id", "nft id")
     .addParam("destchain", "")
     .addParam("relaychain", "")
+    .addParam("receiver", "")
     .addParam("feeaddr", "relay fee token address.give 0x if using native token")
     .addParam("feeamount", "fee amount,using ether unit,can be decimals like 0.00001 or 1 etc")
     .setAction(async (args, hre) => {
@@ -36,7 +37,9 @@ task("crosschain", "call crosschain")
             args.destchain,
             args.relaychain,
             args.feeaddr === '0x' ? hre.ethers.constants.AddressZero : args.feeaddr,
-            txCfg.value,]
+            txCfg.value,
+            args.receiver
+        ]
 
         console.log("call args", callArgs)                           // 
         const result = await ct.crossChain(
@@ -47,12 +50,14 @@ task("crosschain", "call crosschain")
 
     })
 
-task("latestIn", "")
+task("latestMint", "")
     .setAction(async (args, hre) => {
         let fa = await hre.ethers.getContractFactory("CC721")
         let cts = utils.getChainContract(hre.network.name)
         let ct = await fa.attach(cts.cc721)
-        console.log("latestIn:", await ct.latestIn())
+        let latestMint = await ct.latestMint()
+        console.log("latestIn:", latestMint)
+        console.log("origin info:", await ct.enter(latestMint))
 
     })
 
@@ -112,4 +117,13 @@ task("hardhatWork", "test if hardhatwork on one chain likes bsc, rinkeby...")
         console.log("test network", hre.network.name)
         console.log(await hre.ethers.provider.getBlockNumber())
     })
+
+task('owner', '')
+    .addParam('id', '')
+    .setAction(async (args, hre) => {
+        let cts = await utils.getChainContract(hre.network.name)
+        let nft = await hre.ethers.getContractAt('CC721', cts.cc721)
+        console.log(await nft.ownerOf(args.id))
+    })
+
 module.exports = {}
